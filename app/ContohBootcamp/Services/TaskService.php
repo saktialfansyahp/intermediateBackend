@@ -56,4 +56,60 @@ class TaskService {
 		$id = $this->taskRepository->save( $editTask);
 		return $id;
 	}
+    public function deleteTask(string $taskId)
+    {
+        if(!$taskId)
+		{
+			return response()->json([
+				"message"=> "Task ".$taskId." tidak ada"
+			], 401);
+		}
+        $task = $this->taskRepository->delete($taskId);
+        return $task;
+    }
+    public function assignTask(string $taskId, array $data)
+    {
+        if(!$taskId)
+		{
+            return response()->json([
+                "message"=> "Task ".$taskId." tidak ada"
+			], 401);
+		}
+        $task = $this->taskRepository->assign($taskId, $data);
+        return $task;
+    }
+    public function unassignTask(string $taskId)
+    {
+        if(!$taskId)
+		{
+            return response()->json([
+                "message"=> "Task ".$taskId." tidak ada"
+			], 401);
+		}
+        $task = $this->taskRepository->unassign($taskId);
+        return $task;
+    }
+    public function create_subTask(string $taskId, array $data)
+    {
+        if(!$taskId)
+		{
+			return response()->json([
+				"message"=> "Task ".$taskId." tidak ada"
+			], 401);
+		}
+        $task = $this->taskRepository->create_subtask($taskId, $data);
+        return $task;
+    }
+    public function delete_subTask(string $taskId, string $subtaskId)
+    {
+        if(!$taskId)
+		{
+			return response()->json([
+				"message"=> "Task ".$taskId." tidak ada"
+			], 401);
+		}
+
+        $task = $this->taskRepository->delete_subtask($taskId, $subtaskId);
+        return $task;
+    }
 }

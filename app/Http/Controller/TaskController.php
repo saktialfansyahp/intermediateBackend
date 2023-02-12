@@ -71,23 +71,13 @@ class TaskController extends Controller {
 	// TODO: deleteTask()
 	public function deleteTask(Request $request)
 	{
-		$mongoTasks = new MongoModel('tasks');
 		$request->validate([
 			'task_id'=>'required'
 		]);
 
 		$taskId = $request->task_id;
 
-		$existTask = $mongoTasks->find(['_id'=>$taskId]);
-
-		if(!$existTask)
-		{
-			return response()->json([
-				"message"=> "Task ".$taskId." tidak ada"
-			], 401);
-		}
-
-		$mongoTasks->deleteQuery(['_id'=>$taskId]);
+        $task = $this->taskService->deleteTask($taskId);
 
 		return response()->json([
 			'message'=> 'Success delete task '.$taskId
@@ -102,21 +92,12 @@ class TaskController extends Controller {
 			'task_id'=>'required',
 			'assigned'=>'required'
 		]);
-
 		$taskId = $request->get('task_id');
-		$assigned = $request->post('assigned');
-		$existTask = $mongoTasks->find(['_id'=>$taskId]);
+		$data = [
+            $request->post('assigned')
+        ];
 
-		if(!$existTask)
-		{
-			return response()->json([
-				"message"=> "Task ".$taskId." tidak ada"
-			], 401);
-		}
-
-		$existTask['assigned'] = $assigned;
-
-		$mongoTasks->save($existTask);
+        $task = $this->taskService->assignTask($taskId, $data);
 
 		$task = $mongoTasks->find(['_id'=>$taskId]);
 
@@ -126,24 +107,13 @@ class TaskController extends Controller {
 	// TODO: unassignTask()
 	public function unassignTask(Request $request)
 	{
-		$mongoTasks = new MongoModel('tasks');
+        $mongoTasks = new MongoModel('tasks');
 		$request->validate([
 			'task_id'=>'required'
 		]);
+		$taskId = $request->get('task_id');
 
-		$taskId = $request->post('task_id');
-		$existTask = $mongoTasks->find(['_id'=>$taskId]);
-
-		if(!$existTask)
-		{
-			return response()->json([
-				"message"=> "Task ".$taskId." tidak ada"
-			], 401);
-		}
-
-		$existTask['assigned'] = null;
-
-		$mongoTasks->save($existTask);
+        $task = $this->taskService->unassignTask($taskId);
 
 		$task = $mongoTasks->find(['_id'=>$taskId]);
 
@@ -160,31 +130,13 @@ class TaskController extends Controller {
 			'description'=>'required|string'
 		]);
 
-		$taskId = $request->post('task_id');
-		$title = $request->post('title');
-		$description = $request->post('description');
+        $taskId = $request->post('task_id');
+        $data = [
+            'title' => $request->post('title'),
+            'description' => $request->post('description')
+        ];
 
-		$existTask = $mongoTasks->find(['_id'=>$taskId]);
-
-		if(!$existTask)
-		{
-			return response()->json([
-				"message"=> "Task ".$taskId." tidak ada"
-			], 401);
-		}
-
-		$subtasks = isset($existTask['subtasks']) ? $existTask['subtasks'] : [];
-
-		$subtasks[] = [
-			'_id'=> (string) new \MongoDB\BSON\ObjectId(),
-			'title'=>$title,
-			'description'=>$description
-		];
-
-		$existTask['subtasks'] = $subtasks;
-
-		$mongoTasks->save($existTask);
-
+        $task = $this->taskService->create_subTask($taskId, $data);
 		$task = $mongoTasks->find(['_id'=>$taskId]);
 
 		return response()->json($task);
@@ -198,34 +150,10 @@ class TaskController extends Controller {
 			'task_id'=>'required',
 			'subtask_id'=>'required'
 		]);
+        $taskId = $request->post('task_id');
+        $subtaskId = $request->post('subtask_id');
 
-		$taskId = $request->post('task_id');
-		$subtaskId = $request->post('subtask_id');
-
-		$existTask = $mongoTasks->find(['_id'=>$taskId]);
-
-		if(!$existTask)
-		{
-			return response()->json([
-				"message"=> "Task ".$taskId." tidak ada"
-			], 401);
-		}
-
-		$subtasks = isset($existTask['subtasks']) ? $existTask['subtasks'] : [];
-
-		// Pencarian dan penghapusan subtask
-		$subtasks = array_filter($subtasks, function($subtask) use($subtaskId) {
-			if($subtask['_id'] == $subtaskId)
-			{
-				return false;
-			} else {
-				return true;
-			}
-		});
-		$subtasks = array_values($subtasks);
-		$existTask['subtasks'] = $subtasks;
-
-		$mongoTasks->save($existTask);
+		$task = $this->taskService->delete_subTask($taskId, $subtaskId);
 
 		$task = $mongoTasks->find(['_id'=>$taskId]);
 
